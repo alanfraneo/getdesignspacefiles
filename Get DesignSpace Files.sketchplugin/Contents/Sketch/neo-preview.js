@@ -22,6 +22,8 @@ var exportAllPages = function (context, scale) {
   var sketch = context.api();
   var app = sketch.Application();
   var doc = context.document;
+  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.neogallery.sketch");
+  var title = getPageTitle(context, userDefaults);
   var pages = doc.pages();
   var exportPath = getExportPath(doc);
   var imgConfigList = []
@@ -39,7 +41,7 @@ var exportAllPages = function (context, scale) {
         log(imgConfigList);
       }
   }
-  createAndOpenHTML(imgConfigList, exportPath, context);
+  createAndOpenHTML(imgConfigList, exportPath, context, title);
   doc.setCurrentPage(currentPage); // since we change current page for exporting for each page, we reset here to original current page.
 };
 /**
@@ -63,17 +65,18 @@ var exportCurrentPage = function (context, scale) {
   var sketch = context.api();
   var app = sketch.Application();
   var doc = context.document;
+  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.neogallery.sketch");
+  var title = getPageTitle(context, userDefaults);
   var exportPath = getExportPath(doc);
   var page = doc.currentPage();
   var imgConfigList = exportArtboardsOfPage(doc, scale, page, exportPath);
-  createAndOpenHTML(imgConfigList, exportPath, context);
+  createAndOpenHTML(imgConfigList, exportPath, context, title);
 };
 /**
 function for deleting old export folder and creating a new one
 */
 var getExportPath = function (doc) {
   var docLocation = doc.fileURL().path().split(doc.displayName())[0];
-  log(docLocation);
   var exportPath = docLocation + "/neogallery/";
   var imageExportPath = exportPath + "img/";
   FSUtil.deleteAndCreateFolder(exportPath);
@@ -115,13 +118,11 @@ var getArtboardScale = function (artboard, scale) {
 /**
   function for creating the HTML using the img list, once created it will automatically open the file using default browser
 */
-var createAndOpenHTML = function (imgConfigList, exportPath, context) {
-  var config = {"Images" : imgConfigList, "createdDate": currentDate()}
+var createAndOpenHTML = function (imgConfigList, exportPath, context, title) {
+  var config = {"Images" : imgConfigList, "createdDate": currentDate(), "title": title}
   var htmlString = GridHTML.getHTML(context, JSON.stringify(config));
   var someString = [NSString stringWithFormat:"%@", htmlString], filePath = exportPath+"index.html";
   [someString writeToFile:filePath atomically:true encoding:NSUTF8StringEncoding error:nil];
-  var file = NSURL.fileURLWithPath(filePath);
-  NSWorkspace.sharedWorkspace().openFile(file.path());
   context.document.showMessage("Artboards are exported in 'neogallery' folder next to your sketch file.");
 }
 /**
@@ -146,3 +147,20 @@ var scaleArtboard = function(layer, artboardscale) {
     request.scale = artboardscale;
     return request
  };
+
+var getSavedPagetitle = function(userDefaults){
+  var pageTitle = userDefaults.objectForKey("pagetitle");
+  if(pageTitle != undefined){
+    return pageTitle
+  } else {
+    return "NeoGallery"; // Default value
+  }
+}
+
+var getPageTitle = function(context, userDefaults){
+  var UI = require('sketch/ui');
+  var pageTitle = UI.getStringFromUser("Enter your page title", getSavedPagetitle(userDefaults));
+  [userDefaults setObject:pageTitle forKey:"pagetitle"]; // Save to user defaults
+  userDefaults.synchronize();
+  return pageTitle;
+}

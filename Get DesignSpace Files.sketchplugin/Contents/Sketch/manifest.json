@@ -1,6 +1,6 @@
 {
-    "name" : "Neo Preview",
-    "identifier" : "com.sketchapp.neo.preview",
+    "name" : "Get DesignSpace Files",
+    "identifier" : "com.sketchapp.neo.getdesignspace",
     "version" : "1.2",
     "description" : "Open artboards in browser as images",
     "homepage": "https://github.com/alanfraneo/sketch-neo-preview/",
@@ -10,14 +10,14 @@
     {
       "script" : "neo-preview.js",
       "handler" : "exportAllPagesDefault",
-      "shortcut" : "cmd shift .",
+      "shortcut" : "",
       "name" : "Preview all pages",
       "identifier" : "neo-preview-all"
     },
     {
       "script" : "neo-preview.js",
       "handler" : "exportCurrentPageDefault",
-      "shortcut" : "cmd shift ,",
+      "shortcut" : "",
       "name" : "Preview current page",
       "identifier" : "neo-preview-page"
     },
