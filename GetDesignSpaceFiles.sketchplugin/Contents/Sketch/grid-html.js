@@ -5,13 +5,11 @@ GridHTML.getHTML = function (context, config) {
   var neogalleryjs = GridHTML.getJS(context);
   var html =
     '<!DOCTYPE HTML><html><head><meta charset=utf-8><title>NeoGallery</title>\
-      <style>'+neogallerycss+'</style>\
       <link href="/bi/webapp/css/neogallery.v2.css" rel="stylesheet" type="text/css" />\
       </head><body><div id="title"></div>\
       <div id="tabs"></div>\
       <div id="neogallery"></div></body>\
-      <script>var imgconfig = '+config+';\
-      \n'+neogalleryjs+'</script>\
+      <script>var imgconfig = '+config+';</script>\
       <script src="/bi/webapp/js/neogallery.v2.js"></script>\
      </html>';
   return html;

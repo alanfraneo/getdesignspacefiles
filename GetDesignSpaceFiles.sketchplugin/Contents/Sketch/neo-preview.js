@@ -133,8 +133,6 @@ var createAndOpenHTML = function (imgConfigList, exportPath, context, title, ima
   var htmlString = GridHTML.getHTML(context, JSON.stringify(config));
   var someString = [NSString stringWithFormat:"%@", htmlString], filePath = exportPath+"index.html";
   [someString writeToFile:filePath atomically:true encoding:NSUTF8StringEncoding error:nil];
-  var file = NSURL.fileURLWithPath(filePath);
-  NSWorkspace.sharedWorkspace().openFile(file.path());
   context.document.showMessage("Artboards are exported in 'neogallery' folder next to your sketch file.");
 }
 /**
