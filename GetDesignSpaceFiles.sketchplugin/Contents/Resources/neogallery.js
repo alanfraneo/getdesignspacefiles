@@ -58,6 +58,7 @@ var NeoGallery = new function() {
         var title = json.title;
         if (title == undefined) {
             title = document.location.pathname.substring(1);
+            title = decodeURI(title);
         }
         document.title = title;
         document.getElementById("title").innerHTML = `<a id="backbtn" href="../">&lt; Back</a>
