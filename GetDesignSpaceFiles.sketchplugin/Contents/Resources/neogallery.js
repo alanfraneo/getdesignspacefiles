@@ -185,6 +185,7 @@ var NeoGallery = new function() {
         if(document.getElementById("maxedImage")) document.getElementById("maxedImage").remove();
         document.getElementById("neogallery").show();
         document.getElementById("title").show();
+        document.getElementById("tabs").show();
         document.getElementsByClassName("control").hide();
         NeoGallery.removeHash();
     };
