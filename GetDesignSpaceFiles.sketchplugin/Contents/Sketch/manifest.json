@@ -1,7 +1,7 @@
 {
     "name" : "Get DesignSpace Files",
     "identifier" : "com.sketchapp.neo.getdesignspace",
-    "version" : "1.2",
+    "version" : "1.3",
     "description" : "Open artboards in browser as images",
     "homepage": "https://github.com/alanfraneo/sketch-neo-preview/",
     "appcast": "",

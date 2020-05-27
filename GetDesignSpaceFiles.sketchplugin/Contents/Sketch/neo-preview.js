@@ -6,74 +6,65 @@ function for exporting all artboards from all pages except, Symbols, Styles and 
 the scaling of each artboard is forced to 2x.
 */
 var exportAllPages2x = function (context) {
-  exportAllPages(context, '2x');
+  exportAllPages(context, 2);
 }
 /**
 function for exporting all artboards from all pages except, Symbols, Styles and pages beginning with _
 the scaling of each artboard is taken from each artboards topmost export configuration.
 */
 var exportAllPagesDefault = function (context) {
-  exportAllPages(context, 'default');
+  exportAllPages(context);
 }
-/**
-function for exporting all artboards from all pages except, Symbols, Styles and pages beginning with _
-*/
-var exportAllPages = function (context, scale) {
-  var sketch = context.api();
-  var app = sketch.Application();
-  var doc = context.document;
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.neogallery.sketch");
-  var title = getPageTitle(context, userDefaults);
-  var pages = doc.pages();
-  var exportPath = getExportPath(doc);
-  var imgConfigList = []
-  var currentPage = doc.currentPage();
-  var pagenames = [];
-  var imgID = {'idcount': 0};
-  for (var i = 0; i < pages.count(); i++) {
-      var page = pages[i];
-      if (page.name() == "Symbols" || page.name().indexOf("_") == 0 || page.name() == "Styles") {
-  			log('skipping page: '+page.name());
-  		}
-      else{
-        pagenames.push(page.name())
-        doc.setCurrentPage(page);
-        var imgConfigListForPage = exportArtboardsOfPage(doc, scale, page, exportPath, imgID);
-        imgConfigList.push(imgConfigListForPage);
-      }
-  }
-  
-  createAndOpenHTML(imgConfigList, exportPath, context, title, imgID.idcount);
-  doc.setCurrentPage(currentPage); // since we change current page for exporting for each page, we reset here to original current page.
-};
 /**
 function for exporting all artboards from current page.
 the scaling of each artboard is forced to 2x.
 */
-var exportCurrentPage2x = function (context, scale) {
-  exportCurrentPage(context, '2x');
+var exportCurrentPage2x = function (context) {
+  exportCurrentPage(context, 2);
 }
 /**
 function for exporting all artboards from current page.
 the scaling of each artboard is taken from each artboards topmost export configuration.
 */
-var exportCurrentPageDefault = function (context, scale) {
-  exportCurrentPage(context, 'default');
+var exportCurrentPageDefault = function (context) {
+  exportCurrentPage(context);
 }
+/**
+function for exporting all artboards from all pages except, Symbols, Styles and pages beginning with _
+*/
+var exportAllPages = function (context, scale) {
+  var doc = require('sketch/dom').getSelectedDocument();
+  var title = getPageTitle();
+  var pages = doc.pages;
+  var exportPath = getExportPath(doc);
+  var imgConfigList = []
+  var pagenames = [];
+  var imgID = {'idcount': 0};
+  for (var i = 0; i < pages.length; i++) {
+      var page = pages[i];
+      if (page.name == "Symbols" || page.name.indexOf("_") == 0 || page.name == "Styles") {
+  			log('skipping page: '+page.name);
+  		}
+      else{
+        pagenames.push(page.name);
+        var imgConfigListForPage = exportArtboardsOfPage(scale, page, exportPath, imgID);
+        imgConfigList.push(imgConfigListForPage);
+      }
+  }
+  createAndOpenHTML(imgConfigList, exportPath, context, title, imgID.idcount);
+};
+
 /**
 function for exporting all artboards from current page.
 */
 var exportCurrentPage = function (context, scale) {
-  var sketch = context.api();
-  var app = sketch.Application();
-  var doc = context.document;
-  var userDefaults = NSUserDefaults.alloc().initWithSuiteName("com.neogallery.sketch");
-  var title = getPageTitle(context, userDefaults);
+  var doc = require('sketch/dom').getSelectedDocument();
+  var title = getPageTitle();
   var exportPath = getExportPath(doc);
   var imgConfigList = [];
-  var page = doc.currentPage();
+  var page = doc.selectedPage;
   var imgID = {'idcount': 0};
-  var imgConfigListForPage = exportArtboardsOfPage(doc, scale, page, exportPath, imgID);
+  var imgConfigListForPage = exportArtboardsOfPage(scale, page, exportPath, imgID);
   imgConfigList.push(imgConfigListForPage);
   createAndOpenHTML(imgConfigList, exportPath, context, title, imgID.idcount);
 };
@@ -81,10 +72,7 @@ var exportCurrentPage = function (context, scale) {
 function for deleting old export folder and creating a new one
 */
 var getExportPath = function (doc) {
-  var displayname = doc.displayName();
-  displayname = displayname.indexOf(".sketch") > -1 ? displayname.slice(0,-7): displayname;
-  var docLocation = doc.fileURL().path().split(doc.displayName())[0];
-  // log(docLocation);
+  var docLocation = doc.path.split('/').slice(0,-1).join('/');
   var exportPath = docLocation + "/neogallery/";
   var imageExportPath = exportPath + "img/";
   FSUtil.deleteAndCreateFolder(exportPath);
@@ -95,47 +83,47 @@ var getExportPath = function (doc) {
   function for exporting all artboards of a given page.
   returns a json object of the list of images
 */
-var exportArtboardsOfPage = function (doc, scale, page, exportPath, imgID) {
+var exportArtboardsOfPage = function (scale, page, exportPath, imgID) {
+  var UI = require('sketch/ui')
+  var sketch = require('sketch/dom')
   var imgConfigListForPage = [];
   var imageExportPath = exportPath + "img/";
-  doc.showMessage("Exporting page: "+ page.name());
-  var artboards = page.artboards();
+  UI.message("Exporting page: "+ page.name);
+  var artboards = page.layers.filter(l => l.type == 'Artboard');
   var imageID = imgID.idcount;
-  for (var j = 0; j < artboards.count(); j++) {
+  for (var j = 0; j < artboards.length; j++) {
       var artboard = artboards[j];
       //check if artboard is marked for export, ignore others
-      if (artboard.exportOptions().exportFormats().length > 0) {
-          var filename = artboard.name() + ".png";
-          var artboardscale = getArtboardScale(artboard, scale);
-          doc.saveArtboardOrSlice_toFile_(scaleArtboard(artboard, artboardscale), imageExportPath + filename);
+      if (artboard.exportFormats.length > 0) {
+          if (scale == undefined) {
+            scale = artboard.exportFormats[0].size.replace('x','')
+          }
+          var fileFormat = artboard.exportFormats[0].fileFormat;  
+          var filename = artboard.name + ".png";
+          if (scale > 1) {
+            filename = artboard.name +'@'+scale+"x."+artboard.exportFormats[0].fileFormat;
+          }
+          options = {formats: fileFormat, scales: scale, output: imageExportPath};
+          sketch.export(artboard, options);
           imgconfig = {'imageID': ''+imageID, 'imageURL': 'img/'+filename}
           imageID+=1;
           imgConfigListForPage.push(imgconfig);
       }
   }
-  var imgConf = { 'pagename' : ''+page.name(), 'imgList' : imgConfigListForPage};
+  var imgConf = { 'pagename' : ''+page.name, 'imgList' : imgConfigListForPage};
   imgID.idcount = imageID;
   return imgConf;
-}
-var getArtboardScale = function (artboard, scale) {
-  if (scale == '2x') {
-    return '2';
-  }else if(scale == 'default'){
-    //read from artboards top most export config
-    return String(artboard.exportOptions().exportFormats()[0]).split('  ')[0];
-  }else{
-    return '1'; //will never happen
-  }
 }
 /**
   function for creating the HTML using the img list, once created it will automatically open the file using default browser
 */
 var createAndOpenHTML = function (imgConfigList, exportPath, context, title, imageCount) {
   var config = {"Images" : imgConfigList, "imageCount": imageCount, "createdDate": currentDate(), "title": title}
-  var htmlString = GridHTML.getHTML(context, JSON.stringify(config));
+  var htmlString = GridHTML.getHTML(JSON.stringify(config));
   var someString = [NSString stringWithFormat:"%@", htmlString], filePath = exportPath+"index.html";
   [someString writeToFile:filePath atomically:true encoding:NSUTF8StringEncoding error:nil];
-  context.document.showMessage("Artboards are exported in 'neogallery' folder next to your sketch file.");
+  var UI = require('sketch/ui');
+  UI.message("Artboards are exported in 'neogallery' folder next to your sketch file.");
 }
 /**
   function to return current date in dd MMM, YYYY format
@@ -149,30 +137,25 @@ var currentDate = function () {
   return curr_date + " " + m_names[curr_month] + ", " + curr_year;
 }
 /**
-  function to scale the artboard while exporting, current setting is at 2x.
-*/
-var scaleArtboard = function(layer, artboardscale) {
-    var rect = layer.absoluteInfluenceRect()
-    var request = [MSExportRequest new]
-    request.rect = rect
-    // request.scale = 2; //scaling at 2x
-    request.scale = artboardscale;
-    return request
- };
-
- var getSavedPagetitle = function(userDefaults){
-  var pageTitle = userDefaults.objectForKey("pagetitle");
-  if(pageTitle != undefined){
-    return pageTitle
-  } else {
-    return "NeoGallery"; // Default value
-  }
-}
-
-var getPageTitle = function(context, userDefaults){
+ * function to get the page title from the user input.
+ */
+var getPageTitle = function(){
+  var settings = require('sketch/settings')
   var UI = require('sketch/ui');
-  var pageTitle = UI.getStringFromUser("Enter your page title", getSavedPagetitle(userDefaults));
-  [userDefaults setObject:pageTitle forKey:"pagetitle"]; // Save to user defaults
-  userDefaults.synchronize();
-  return pageTitle;
+  var savedTitle = settings.settingForKey("neodashpreview-pagetitle");
+  var pageTitle = savedTitle ? savedTitle: "Neogallery";
+  UI.getInputFromUser(
+    "Enter the page title", 
+    {
+      initialValue: pageTitle
+    },
+    (error, value) => {
+      if (error) {
+        log("user input cancelled");
+        throw error;
+      }
+      pageTitle = value;
+      settings.setSettingForKey("neodashpreview-pagetitle", pageTitle); // Save to user preferences
+      return pageTitle;
+  });
 }
