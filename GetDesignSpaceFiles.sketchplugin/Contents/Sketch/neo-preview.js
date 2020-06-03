@@ -6,33 +6,33 @@ function for exporting all artboards from all pages except, Symbols, Styles and 
 the scaling of each artboard is forced to 2x.
 */
 var exportAllPages2x = function (context) {
-  exportAllPages(context, 2);
+  exportAllPages(2);
 }
 /**
 function for exporting all artboards from all pages except, Symbols, Styles and pages beginning with _
 the scaling of each artboard is taken from each artboards topmost export configuration.
 */
 var exportAllPagesDefault = function (context) {
-  exportAllPages(context);
+  exportAllPages();
 }
 /**
 function for exporting all artboards from current page.
 the scaling of each artboard is forced to 2x.
 */
 var exportCurrentPage2x = function (context) {
-  exportCurrentPage(context, 2);
+  exportCurrentPage(2);
 }
 /**
 function for exporting all artboards from current page.
 the scaling of each artboard is taken from each artboards topmost export configuration.
 */
 var exportCurrentPageDefault = function (context) {
-  exportCurrentPage(context);
+  exportCurrentPage();
 }
 /**
 function for exporting all artboards from all pages except, Symbols, Styles and pages beginning with _
 */
-var exportAllPages = function (context, scale) {
+var exportAllPages = function (scale) {
   var doc = require('sketch/dom').getSelectedDocument();
   var title = getPageTitle();
   var pages = doc.pages;
@@ -51,13 +51,13 @@ var exportAllPages = function (context, scale) {
         imgConfigList.push(imgConfigListForPage);
       }
   }
-  createAndOpenHTML(imgConfigList, exportPath, context, title, imgID.idcount);
+  createAndOpenHTML(imgConfigList, exportPath, title, imgID.idcount);
 };
 
 /**
 function for exporting all artboards from current page.
 */
-var exportCurrentPage = function (context, scale) {
+var exportCurrentPage = function (scale) {
   var doc = require('sketch/dom').getSelectedDocument();
   var title = getPageTitle();
   var exportPath = getExportPath(doc);
@@ -66,7 +66,7 @@ var exportCurrentPage = function (context, scale) {
   var imgID = {'idcount': 0};
   var imgConfigListForPage = exportArtboardsOfPage(scale, page, exportPath, imgID);
   imgConfigList.push(imgConfigListForPage);
-  createAndOpenHTML(imgConfigList, exportPath, context, title, imgID.idcount);
+  createAndOpenHTML(imgConfigList, exportPath, title, imgID.idcount);
 };
 /**
 function for deleting old export folder and creating a new one
@@ -117,7 +117,7 @@ var exportArtboardsOfPage = function (scale, page, exportPath, imgID) {
 /**
   function for creating the HTML using the img list, once created it will automatically open the file using default browser
 */
-var createAndOpenHTML = function (imgConfigList, exportPath, context, title, imageCount) {
+var createAndOpenHTML = function (imgConfigList, exportPath, title, imageCount) {
   var config = {"Images" : imgConfigList, "imageCount": imageCount, "createdDate": currentDate(), "title": title}
   var htmlString = GridHTML.getHTML(JSON.stringify(config));
   var someString = [NSString stringWithFormat:"%@", htmlString], filePath = exportPath+"index.html";
@@ -156,6 +156,6 @@ var getPageTitle = function(){
       }
       pageTitle = value;
       settings.setSettingForKey("neodashpreview-pagetitle", pageTitle); // Save to user preferences
-      return pageTitle;
   });
+  return pageTitle;
 }
